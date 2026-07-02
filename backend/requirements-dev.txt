@@ -14,5 +14,5 @@ ruff==0.7.4
 pre-commit==4.0.1
 hypothesis==6.115.6
 schemathesis==3.27.1
-bandit==1.7.10
+bandit==1.9.4
 pip-audit==2.7.3
