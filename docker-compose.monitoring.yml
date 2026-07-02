@@ -1,0 +1,28 @@
+# Monitoring overlay: docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  autoheal:
+    image: willfarrell/autoheal:latest
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: all
+      AUTOHEAL_INTERVAL: 30
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

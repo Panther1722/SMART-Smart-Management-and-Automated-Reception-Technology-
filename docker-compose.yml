@@ -1,0 +1,97 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ai_receptionist}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://postgres:postgres@db:5432/ai_receptionist}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-*}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_JSON: ${LOG_JSON:-false}
+      RATE_LIMIT: ${RATE_LIMIT:-60/minute}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      ADMIN_API_KEY_PREVIOUS: ${ADMIN_API_KEY_PREVIOUS:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+      ADMIN_TOTP_SECRET: ${ADMIN_TOTP_SECRET:-}
+      FIELD_ENCRYPTION_KEY: ${FIELD_ENCRYPTION_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      LLM_MODEL: ${LLM_MODEL:-gemini-2.5-flash}
+      API_KEY: ${API_KEY:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-15}
+      LLM_MAX_HISTORY_MESSAGES: ${LLM_MAX_HISTORY_MESSAGES:-20}
+      LLM_CHAT_TEMPERATURE: ${LLM_CHAT_TEMPERATURE:-0.6}
+      LLM_CHAT_MAX_TOKENS: ${LLM_CHAT_MAX_TOKENS:-450}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      HOTEL_NAME: ${HOTEL_NAME:-SMART Hotel}
+      BOOKING_NOTIFY_EMAIL: ${BOOKING_NOTIFY_EMAIL:-}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-auto}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${RESEND_FROM:-}
+      RESEND_ALLOWED_TO: ${RESEND_ALLOWED_TO:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_USE_SSL: ${SMTP_USE_SSL:-false}
+      MAILPIT_UI_URL: ${MAILPIT_UI_URL:-http://localhost:8025}
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+
+volumes:
+  postgres_data:
+

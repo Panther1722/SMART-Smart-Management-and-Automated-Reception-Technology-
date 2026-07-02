@@ -1,0 +1,12 @@
+.env
+postgres_data
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+backend/.venv/
+backend/venv/
+node_modules/
+
