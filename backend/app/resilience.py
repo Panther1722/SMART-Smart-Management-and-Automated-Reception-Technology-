@@ -83,7 +83,7 @@ def retry_http_post(
             return data
         except (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError) as exc:
             last_error = exc
-            retryable = isinstance(exc, (httpx.TimeoutException, httpx.NetworkError))
+            retryable = isinstance(exc, httpx.TimeoutException | httpx.NetworkError)
             if isinstance(exc, httpx.HTTPStatusError):
                 retryable = exc.response.status_code >= 500
             if not retryable or attempt == max_attempts:

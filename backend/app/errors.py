@@ -53,7 +53,7 @@ def _sanitize_for_json(value: object) -> object:
         return {str(k): _sanitize_for_json(v) for k, v in value.items()}
     if isinstance(value, list):
         return [_sanitize_for_json(item) for item in value]
-    if isinstance(value, (str, int, float, bool)) or value is None:
+    if isinstance(value, str | int | float | bool) or value is None:
         return value
     return str(value)
 
