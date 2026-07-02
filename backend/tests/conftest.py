@@ -55,4 +55,4 @@ def client(db_session):
 
 @pytest.fixture()
 def admin_headers():
-    return {"X-API-Key": "test-admin-key"}
+    return {"X-API-Key": os.environ["ADMIN_API_KEY"]}
