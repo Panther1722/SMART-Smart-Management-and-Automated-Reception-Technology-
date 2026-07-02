@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 from .field_extraction import ExtractedFields
 
 REQUEST_TYPE_BOOKING = "booking"

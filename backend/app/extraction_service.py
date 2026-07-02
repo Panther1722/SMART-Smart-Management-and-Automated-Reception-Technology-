@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 
 from .chat_rules import REQUEST_TYPE_GENERAL, detect_request_type
-
 from .date_normalization import normalize_relative_dates
 from .field_extraction import ExtractedFields, extract_fields, merge_fields
 from .llm_service import extract_booking_fields_llm, is_llm_enabled

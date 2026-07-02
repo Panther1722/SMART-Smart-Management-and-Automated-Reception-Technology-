@@ -1,26 +1,17 @@
 import logging
-
 import uuid
-
-from datetime import datetime, timezone
-
-from typing import List
-
-
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from .auth import create_session_token, require_admin_access, require_session_token
 from .audit import write_audit
+from .auth import create_session_token, require_admin_access, require_session_token
 from .chat_rules import build_reply, is_booking_ready_for_confirmation
-from .dlq import enqueue_failure
 from .database import get_db
-from .pii import decrypt_session, encrypt_email
-
+from .dlq import enqueue_failure
 from .email_service import (
     get_email_config,
     is_email_enabled,
@@ -28,43 +19,25 @@ from .email_service import (
     send_staff_booking_notification,
     send_test_email,
 )
-
 from .extraction_service import resolve_extraction, session_request_type_from_rows
-
 from .field_extraction import ExtractedFields, fields_from_booking_request, merge_fields
-
 from .llm_service import generate_chat_reply, get_llm_config
-from .resilience import get_llm_circuit_breaker
-
 from .models import BookingRequest, ChatSession
-
+from .pii import decrypt_session, encrypt_email
 from .rate_limit import limiter
-
+from .resilience import get_llm_circuit_breaker
 from .schemas import (
-
     BookingRequestCreate,
-
     BookingRequestOut,
-
     ChatHistoryMessage,
-
     ChatHistoryResponse,
-
     ChatRequest,
-
     ChatResponse,
-
     EmailTestResponse,
-
     SessionOut,
-
     SessionStartRequest,
-
     SessionStartResponse,
-
 )
-
-
 
 logger = logging.getLogger("app.routes")
 
@@ -314,7 +287,7 @@ def create_booking_request(payload: BookingRequestCreate, db: Session = Depends(
 
 
 
-@router.get("/api/booking-requests", response_model=List[BookingRequestOut])
+@router.get("/api/booking-requests", response_model=list[BookingRequestOut])
 def list_booking_requests(
     request: Request,
     db: Session = Depends(get_db),
@@ -508,7 +481,7 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)):
                     guest_email=email_recipient,
                     request_type=request_type,
                 )
-                chat_session.confirmation_email_sent_at = datetime.now(timezone.utc)
+                chat_session.confirmation_email_sent_at = datetime.now(UTC)
                 db.commit()
                 email_sent = True
             else:

@@ -1,6 +1,5 @@
 """Auth token and encryption unit tests."""
 
-import os
 
 from cryptography.fernet import Fernet
 

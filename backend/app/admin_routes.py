@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.orm import Session
 
 from .audit import write_audit
 from .auth import create_admin_jwt, verify_totp
 from .config import Settings, get_settings
 from .database import get_db
 from .schemas import AdminMfaRequest, AdminMfaResponse
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 

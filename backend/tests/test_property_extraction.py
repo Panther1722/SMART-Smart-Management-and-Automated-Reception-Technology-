@@ -2,13 +2,14 @@
 
 from datetime import date
 
-from hypothesis import given, settings as hyp_settings
-from hypothesis import strategies as st
-
-from app.field_extraction import extract_fields, merge_fields, ExtractedFields
-from app.schemas import SessionStartRequest
-from pydantic import ValidationError
 import pytest
+from hypothesis import given
+from hypothesis import settings as hyp_settings
+from hypothesis import strategies as st
+from pydantic import ValidationError
+
+from app.field_extraction import ExtractedFields, extract_fields, merge_fields
+from app.schemas import SessionStartRequest
 
 
 @hyp_settings(max_examples=100, deadline=None)
