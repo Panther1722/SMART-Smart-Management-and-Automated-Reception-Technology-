@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.date_normalization import normalize_relative_dates
+from app.extraction_service import resolve_extraction
 from app.field_extraction import ExtractedFields, extract_fields, merge_fields
 from app.schemas import ChatRequest, SessionStartRequest
 
@@ -37,6 +38,45 @@ class TestDateNormalization:
     def test_next_week_ambiguous(self):
         result = normalize_relative_dates("maybe next week", base_date=date(2026, 7, 2))
         assert result.check_in is None
+
+    def test_possessive_tomorrow(self):
+        result = normalize_relative_dates("tomorrows evening", base_date=date(2026, 7, 2))
+        assert result.check_in == date(2026, 7, 3)
+
+
+class TestContextualRelativeDate:
+    """Reproduces the guest reply pattern from the reported chat bug."""
+
+    def test_bare_tomorrow_fills_pending_check_out(self):
+        session_fields = ExtractedFields(check_in=date(2026, 7, 10))
+        merged, _, _ = resolve_extraction(
+            "tomorrow i wanna check out",
+            [],
+            session_fields,
+            "booking",
+        )
+        assert merged.check_out is not None
+        assert merged.check_in == date(2026, 7, 10)
+
+    def test_possessive_tomorrow_evening_fills_pending_check_out(self):
+        session_fields = ExtractedFields(check_in=date(2026, 7, 10))
+        merged, _, _ = resolve_extraction(
+            "tomorrows evening",
+            [],
+            session_fields,
+            "booking",
+        )
+        assert merged.check_out is not None
+
+    def test_explicit_check_out_keyword_not_overridden(self):
+        session_fields = ExtractedFields(check_in=date(2026, 7, 10))
+        merged, _, _ = resolve_extraction(
+            "check out date is 15 july",
+            [],
+            session_fields,
+            "booking",
+        )
+        assert merged.check_out == date(2026, 7, 15)
 
 
 class TestSchemas:

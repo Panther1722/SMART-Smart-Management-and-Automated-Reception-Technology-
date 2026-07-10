@@ -80,9 +80,13 @@ _MONTHS = {
 
 _ISO_DATE_RE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 _SLASH_DATE_RE = re.compile(r"\b(\d{1,2}/\d{1,2}/\d{2,4})\b")
+# Month word is restricted to actual month names/abbreviations so filler words
+# like "is"/"on"/"at" in phrases such as "check out date is 15 july" can't be
+# mistaken for a month and consume the day number before the real date match.
+_MONTH_WORD_RE = "(?:" + "|".join(sorted(_MONTHS, key=len, reverse=True)) + ")"
 _TEXT_DATE_RE = re.compile(
-    r"\b(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)(?:\s+(\d{4}))?\b"
-    r"|\b([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?(?:\s+(\d{4}))?\b",
+    rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+({_MONTH_WORD_RE})(?:\s+(\d{{4}}))?\b"
+    rf"|\b({_MONTH_WORD_RE})\s+(\d{{1,2}})(?:st|nd|rd|th)?(?:\s+(\d{{4}}))?\b",
     re.IGNORECASE,
 )
 
@@ -344,9 +348,13 @@ def _parse_date_phrase(phrase: str, today: date) -> date | None:
     if slash:
         return _parse_slash_date(slash.group(1), today)
 
-    text = _TEXT_DATE_RE.search(phrase)
-    if text:
-        return _parse_text_date_match(text, today)
+    # Try every candidate match, not just the first: a leading filler word
+    # (e.g. "is 15 july") can match the day/month pattern with an invalid
+    # month name ("is") before the real date is reached.
+    for text in _TEXT_DATE_RE.finditer(phrase):
+        parsed = _parse_text_date_match(text, today)
+        if parsed:
+            return parsed
 
     ordinal = _ORDINAL_DATE_RE.search(phrase)
     if ordinal:

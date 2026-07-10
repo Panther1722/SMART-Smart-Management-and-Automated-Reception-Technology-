@@ -55,6 +55,32 @@ def _apply_relative_date_overrides(message: str, fields: ExtractedFields) -> Ext
     return merged
 
 
+def _apply_contextual_relative_date(
+    message: str, session_fields: ExtractedFields, current_fields: ExtractedFields
+) -> ExtractedFields:
+    """
+    Fill in a still-missing check-in/check-out from a bare relative-date reply.
+
+    Rule-based extraction only recognizes "tomorrow" etc. next to explicit
+    check-in/check-out keywords. When the guest instead replies with just
+    "tomorrow evening" (no keyword) to a direct follow-up question, apply it
+    to whichever date the conversation is still waiting on, but only if this
+    message didn't already yield an explicit check-in/check-out itself.
+    """
+    if current_fields.check_in is not None or current_fields.check_out is not None:
+        return current_fields
+
+    normalized = normalize_relative_dates(message)
+    if normalized.check_in is None:
+        return current_fields
+
+    if session_fields.check_in is None:
+        return merge_fields(current_fields, ExtractedFields(check_in=normalized.check_in))
+    if session_fields.check_out is None:
+        return merge_fields(current_fields, ExtractedFields(check_out=normalized.check_in))
+    return current_fields
+
+
 def _validate_dates(fields: ExtractedFields) -> ExtractedFields:
     """Basic sanity checks to prevent inverted date ranges."""
     if fields.check_in and fields.check_out and fields.check_out < fields.check_in:
@@ -137,6 +163,8 @@ def resolve_extraction(
         llm_fields = llm_result_to_fields(llm_result)
         llm_fields = _apply_relative_date_overrides(message, llm_fields)
         current_fields = merge_fields(rule_fields, llm_fields)
+
+    current_fields = _apply_contextual_relative_date(message, session_fields, current_fields)
 
     merged_fields = merge_fields(session_fields, current_fields)
     merged_fields = _validate_dates(merged_fields)

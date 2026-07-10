@@ -17,9 +17,9 @@ class NormalizedRelativeDates:
     check_out: date | None = None
 
 
-_TODAY_RE = re.compile(r"\btoday\b", re.IGNORECASE)
-_TOMORROW_RE = re.compile(r"\btomorrow\b", re.IGNORECASE)
-_DAY_AFTER_TOMORROW_RE = re.compile(r"\bday\s+after\s+tomorrow\b", re.IGNORECASE)
+_TODAY_RE = re.compile(r"\btoday'?s?\b", re.IGNORECASE)
+_TOMORROW_RE = re.compile(r"\btomorrow'?s?\b", re.IGNORECASE)
+_DAY_AFTER_TOMORROW_RE = re.compile(r"\bday\s+after\s+tomorrow'?s?\b", re.IGNORECASE)
 _NEXT_WEEK_RE = re.compile(r"\bnext\s+week\b", re.IGNORECASE)
 _THIS_WEEKDAY_RE = re.compile(
     r"\bthis\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b",
