@@ -10,7 +10,6 @@
     "8000": { "label": "Backend (FastAPI)", "onAutoForward": "notify" },
     "5432": { "label": "PostgreSQL", "onAutoForward": "silent" }
   },
-  "postCreateCommand": "cp -n .env.example .env || true",
   "postStartCommand": "docker compose up -d --build",
   "customizations": {
     "vscode": {

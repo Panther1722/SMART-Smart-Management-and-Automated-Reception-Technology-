@@ -21,7 +21,8 @@ services:
       context: ./backend
     restart: unless-stopped
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       APP_ENV: ${APP_ENV:-development}
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://postgres:postgres@db:5432/ai_receptionist}
